@@ -1,0 +1,237 @@
+Create a Database
+use mydatabase
+
+Create a Collection
+db.hotelroot.insertMany([
+{"_id":1, "roomID":1, "orderID":1, "customerID":1 },
+{"_id":2, "roomID":1, "orderID":5, "customerID":3 },
+{"_id":3, "roomID":2, "orderID":7, "customerID":4 },
+{"_id":4, "roomID":3, "orderID":4, "customerID":2 },
+])
+
+db.rooms.insertMany([
+{"_id":1, "roomType":"Delux"},
+{"_id":2, "roomType":"Single"},
+{"_id":3, "roomType":"Double"},
+{"_id":4, "roomType":"Suite"}
+])
+
+db.reservations.insertMany( [
+   {"_id": 1, "reserved": ISODate("2022-10-21") },
+   {"_id": 2, "reserved": ISODate("2022-10-21") },
+   {"_id": 3, "reserved": ISODate("2024-10-21") },
+   {"_id": 4, "reserved": ISODate("2022-10-21") },
+   {"_id": 5, "reserved": ISODate("2025-10-21") },
+   {"_id": 6, "reserved": ISODate("2025-10-21") },
+   {"_id": 7, "reserved": ISODate("2024-10-21") },
+] )
+db.customers.insertMany([
+{"_id":1, "name":"John Haston"},
+{"_id":2, "name":"Patrick Williams"},
+{"_id":3, "name":"Vikash Saxena"},
+{"_id":4, "name":"Tom Crimson"}
+])
+
+Remove a Collection
+db.rooms.drop()
+db.reservations.drop()
+db.customers.drop()
+db.hotelroot.drop()
+
+Aggregation
+db.rooms.aggregate([
+
+{ $match: { "roomType":"Delux" } },
+
+{ $lookup: { from: "reservations",
+localField: "_id",
+foreignField: "_id",
+as: "reservations" }},
+
+{ $lookup: { from: "customers",
+localField: "_id",
+foreignField: "_id",
+as: "customers" }},
+
+]).pretty();
+=============================================================================================================================================================
+db.rooms.aggregate([
+
+{ $match: { "roomType":"Delux" } },
+
+{ $lookup: { from: "reservations",
+localField: "_id",
+foreignField: "_id",
+as: "reservations" }},
+
+{ $lookup: { from: "customers",
+localField: "_id",
+foreignField: "_id",
+as: "customers" }},
+
+]).pretty();
+=============================================================================================================================================================
+db.reservations.aggregate([
+{
+	$group:
+      	{
+         	_id: { $dateToString: { format: "%Y", date: "$reserved" } },
+		count:{$sum:1}
+	}
+},
+{ $lookup: { from: "rooms",
+localField: "_id",
+foreignField: "_id",
+as: "rooms" }},
+
+{ $lookup: { from: "customers",
+localField: "_id",
+foreignField: "_id",
+as: "customers" }},
+
+{
+      $sort: { count: -1 }
+}
+
+]).pretty();
+=============================================================================================================================================================
+db.hotel.aggregate([
+
+{ $lookup: { from: "rooms",
+localField: "roomID",
+foreignField: "_id",
+as: "rooms",
+pipeline: [
+          	{ $match: { "roomType":"Delux" } },
+          ]
+}},
+
+{ $match: { "rooms": { $ne: [] } } },
+
+{ $lookup: { from: "reservations",
+localField: "orderID",
+foreignField: "_id",
+as: "reservations"
+}},
+
+{ $lookup: { from: "customers",
+localField: "customerID",
+foreignField: "_id",
+as: "customers" 
+}},
+]).pretty();
+=============================================================================================================================================================
+db.hotelroot.aggregate([
+{ $lookup: { from: "rooms",
+localField: "roomID",
+foreignField: "_id",
+as: "rooms",
+pipeline: [
+          	{ $match: { "roomType":"Delux" } },
+		{ $project: { _id: 0, roomType: 0 } }
+          ]
+}},
+
+{ $match: { "rooms": { $ne: [] } } },
+
+{ $lookup: { from: "customers",
+localField: "customerID",
+foreignField: "_id",
+as: "customers" 
+}},
+]).pretty();
+
+connect to deployment
+
+Local MongoDB Instance on Default Port
+mongosh
+
+Verify Current Connection
+db.getMongo()
+
+Disconnect from a Deployment
+exit
+
+create a user
+
+db.createUser(
+  {
+    user: "devopsuser",
+    pwd:  passwordPrompt(),   // or cleartext password
+    roles: [ { role: "readWrite", db: "test" },
+             { role: "read", db: "hotelroot" } ]
+  }
+)
+
+create a databse
+Create a Database
+use hoteldb
+
+Create a Collection
+db.hotelroot.insertMany([
+{"_id":1, "roomID":1, "orderID":1, "customerID":1 },
+{"_id":2, "roomID":1, "orderID":5, "customerID":3 },
+{"_id":3, "roomID":2, "orderID":7, "customerID":4 },
+{"_id":4, "roomID":3, "orderID":4, "customerID":2 },
+])
+
+db.rooms.insertMany([
+{"_id":1, "roomType":"Delux"},
+{"_id":2, "roomType":"Single"},
+{"_id":3, "roomType":"Double"},
+{"_id":4, "roomType":"Suite"}
+])
+
+db.reservations.insertMany( [
+   {"_id": 1, "reserved": ISODate("2022-10-21") },
+   {"_id": 2, "reserved": ISODate("2022-10-21") },
+   {"_id": 3, "reserved": ISODate("2024-10-21") },
+   {"_id": 4, "reserved": ISODate("2022-10-21") },
+   {"_id": 5, "reserved": ISODate("2025-10-21") },
+   {"_id": 6, "reserved": ISODate("2025-10-21") },
+   {"_id": 7, "reserved": ISODate("2024-10-21") },
+] )
+db.customers.insertMany([
+{"_id":1, "name":"John Haston"},
+{"_id":2, "name":"Patrick Williams"},
+{"_id":3, "name":"Vikash Saxena"},
+{"_id":4, "name":"Tom Crimson"}
+])
+
+Remove a Collection
+db.rooms.drop()
+db.reservations.drop()
+db.customers.drop()
+db.hotelroot.drop()
+
+create an index
+
+Create an Index
+db.hotelroot.createIndex( { _id: -1 } )
+
+query doc
+
+db.rooms.find()
+db.reservations.find()
+db.customers.find()
+db.hotelroot.find()
+
+db.customers.updateOne(
+   { "name": "John Haston" },
+   {
+     $set: { "name": "John Peterson" }
+   }
+)
+
+db.reservations.updateMany(
+   { "reserved": ISODate("2022-10-21") },
+   {
+     $set: { "reserved": ISODate("2021-10-21") }
+   }
+)
+
+db.customers.deleteOne( { "name": "John Peterson" } )
+
+db.reservations.deleteMany(
+   { "reserved": ISODate("2021-10-21") }
+)
